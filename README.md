@@ -48,6 +48,36 @@ This project includes user authentication, interview question generation, answer
 
 ---
 
+## Production deployment
+
+### Backend on Render
+
+Deploy `backend/` as a Docker service using [backend/Dockerfile](backend/Dockerfile). Configure these variables in Render instead of committing a `.env` file:
+
+```text
+ENVIRONMENT=production
+USE_MOCK_AI=true
+MONGO_URI=mongodb+srv://...
+MONGO_DB_NAME=ai_interview_platform
+JWT_SECRET=<long-random-secret>
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+ALLOWED_ORIGINS=https://your-frontend.vercel.app
+TESSERACT_CMD=/usr/bin/tesseract
+```
+
+Render supplies `PORT` automatically. For live AI later, set `USE_MOCK_AI=false` and add a project-specific `OPENAI_API_KEY` directly in Render.
+
+### Frontend on Vercel
+
+Deploy `frontend/` with the Vite preset and configure:
+
+```text
+VITE_API_BASE_URL=https://your-backend.onrender.com
+```
+
+Use the backend origin without `/api`; Axios adds that prefix. [frontend/vercel.json](frontend/vercel.json) supplies the SPA rewrite for React Router URLs.
+
 ## Screenshots
 
 ### Landing Page

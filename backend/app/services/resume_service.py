@@ -1,4 +1,6 @@
 import io
+import os
+import shutil
 from pathlib import Path
 
 import fitz
@@ -11,9 +13,21 @@ MAX_FILE_SIZE = 5 * 1024 * 1024
 MIN_RESUME_TEXT_LENGTH = 300
 ALLOWED_RESUME_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 
-# Configure pytesseract in Python. This must not be run as a PowerShell command.
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Prefer an explicit deployment setting, then the system PATH, then the known
+# local Windows installation. The Docker image discovers /usr/bin/tesseract.
+WINDOWS_TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+TESSERACT_COMMAND = (
+    os.getenv("TESSERACT_CMD")
+    or shutil.which("tesseract")
+    or (WINDOWS_TESSERACT_PATH if Path(WINDOWS_TESSERACT_PATH).is_file() else "")
+)
+pytesseract.pytesseract.tesseract_cmd = TESSERACT_COMMAND or "tesseract"
 TESSERACT_PATH = Path(pytesseract.pytesseract.tesseract_cmd)
+
+
+def tesseract_is_available() -> bool:
+    command = pytesseract.pytesseract.tesseract_cmd
+    return Path(command).is_file() or shutil.which(command) is not None
 
 
 def validate_resume_text(text: str, *, source: str = "text") -> str:
@@ -73,7 +87,7 @@ async def extract_resume_text(file: UploadFile) -> str:
                 if len(cleaned_text) >= MIN_RESUME_TEXT_LENGTH:
                     return cleaned_text
 
-                if not TESSERACT_PATH.is_file():
+                if not tesseract_is_available():
                     raise HTTPException(
                         status_code=503,
                         detail=(
@@ -111,7 +125,7 @@ async def extract_resume_text(file: UploadFile) -> str:
         except Exception as error:
             raise HTTPException(status_code=400, detail="Could not read this PDF") from error
 
-    if not TESSERACT_PATH.is_file():
+    if not tesseract_is_available():
         raise HTTPException(
             status_code=503,
             detail=(
