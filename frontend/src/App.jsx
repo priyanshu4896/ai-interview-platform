@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Dashboard from './pages/Dashboard'
@@ -22,10 +22,12 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/interview" element={<Navigate to="/interview/setup" replace />} />
           <Route path="/interview/setup" element={<InterviewSetup />} />
           <Route path="/interview/:id" element={<InterviewRoom />} />
           <Route path="/result/:id" element={<Result />} />
           <Route path="/resume" element={<ResumeAnalyzer />} />
+          <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

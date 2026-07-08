@@ -1,3 +1,13 @@
+---
+title: AI Interview Platform
+emoji: 🤖
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # AI Interview Preparation Platform
 
 A full-stack AI Interview Preparation Platform that helps users practice interviews, get feedback, check scores, analyze resumes, and track interview history.
@@ -48,35 +58,24 @@ This project includes user authentication, interview question generation, answer
 
 ---
 
-## Production deployment
+## Hugging Face Spaces deployment
 
-### Backend on Render
+This repository deploys as one Docker Space. The root [Dockerfile](Dockerfile) builds React, copies `frontend/dist` into the FastAPI image, installs Tesseract, and serves the entire application on port `7860`.
 
-Deploy `backend/` as a Docker service using [backend/Dockerfile](backend/Dockerfile). Configure these variables in Render instead of committing a `.env` file:
+Create a Docker Space, upload this repository, and configure these Space secrets/variables:
 
 ```text
-ENVIRONMENT=production
-USE_MOCK_AI=true
 MONGO_URI=mongodb+srv://...
-MONGO_DB_NAME=ai_interview_platform
 JWT_SECRET=<long-random-secret>
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
-ALLOWED_ORIGINS=https://your-frontend.vercel.app
+USE_MOCK_AI=true
 TESSERACT_CMD=/usr/bin/tesseract
 ```
 
-Render supplies `PORT` automatically. For live AI later, set `USE_MOCK_AI=false` and add a project-specific `OPENAI_API_KEY` directly in Render.
+`MONGO_URI` and `JWT_SECRET` must be stored as Hugging Face secrets, never committed. Mock mode does not require `OPENAI_API_KEY`. If live AI is enabled later, set `USE_MOCK_AI=false` and add a project-specific `OPENAI_API_KEY` as a Space secret.
 
-### Frontend on Vercel
-
-Deploy `frontend/` with the Vite preset and configure:
-
-```text
-VITE_API_BASE_URL=https://your-backend.onrender.com
-```
-
-Use the backend origin without `/api`; Axios adds that prefix. [frontend/vercel.json](frontend/vercel.json) supplies the SPA rewrite for React Router URLs.
+The browser calls the backend through same-origin `/api` URLs. FastAPI serves the built React files and falls back to `index.html` for client-side routes.
 
 ## Screenshots
 
@@ -127,7 +126,6 @@ AI INTERVIEW/
 │
 ├── frontend/
 │   ├── src/
-│   ├── .env.example
 │   ├── package.json
 │   └── README.md
 │
@@ -141,5 +139,7 @@ AI INTERVIEW/
 │   ├── resume-analyzer.png
 │   └── resume-score.png
 │
+├── Dockerfile
+├── .dockerignore
 ├── .gitignore
 └── README.md
